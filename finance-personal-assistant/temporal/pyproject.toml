@@ -1,0 +1,15 @@
+[project]
+name = "cookbook-basic-python"
+version = "0.1"
+description = "Basic example"
+authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
+requires-python = ">=3.10"
+readme = "README.md"
+license = "MIT"
+dependencies = [
+    "temporalio>=1.15.0",
+    "pydantic>=2.6.0",
+    "strands-agents>=1.7.1",
+    "strands-agents-tools>=0.2.6",
+    "matplotlib>=3.10.6",
+    "yfinance>=0.2.65",]
