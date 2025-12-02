@@ -4,6 +4,8 @@ This sample extends the [finance-personal-assistant](https://github.com/awslabs/
 
 Temporal is used to orchestrate two micro-agents, each of which are implemented using Strands. 
 
+![Temporal Agent Orchestrator](/images/temporalarchitecture.png)
+
 ## Demo
 
 ### Run locally
