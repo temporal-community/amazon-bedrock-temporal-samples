@@ -8,7 +8,7 @@
 
 Welcome to the Amazon Bedrock Temporal Samples repository! 
 
-Please note that this repository draws from others, including the [Amazon Bedrock AgentCore Samples repository](https://github.com/awslabs/amazon-bedrock-agentcore-samples).
+This repository draws from others, including the [Amazon Bedrock AgentCore Samples repository](https://github.com/awslabs/amazon-bedrock-agentcore-samples).
 
 Amazon Bedrock AgentCore is both framework-agnostic and model-agnostic, giving you the flexibility to deploy and operate advanced AI agents securely and at scale. 
 
