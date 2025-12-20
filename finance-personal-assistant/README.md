@@ -68,13 +68,13 @@ aws sso login --profile <your profile>
 Note that your mileage my vary - you may have other ways that you autheticate to AWS 
 
 1. Run the Temporal worker with
-```
+```bash
 uv run python -m temporal.worker
 ```
 
 2. Interact with the agent
 (in a second terminal window)
-```
+```bash
 uv run python -m temporal.start_workflow
 ```
 
@@ -91,34 +91,34 @@ The implementation of the `get_forecast` tool includes a 10 second sleep between
 ##### Using `pfctl` on a Mac
 
 We will simulate a network outage by adding firewall rules using `pfctl`. This repository includes a `pf.rules` file that has URLs I am currently seeing for the NWS API. You can check what these are right now with the following command:
-```
+```bash
 dig +short api.weather.gov
 ```
 
 The following commands are used to set and delete the rules, and enable and disable the firewall.
 
 To set rules
-```
+```bash
 sudo pfctl -f pf.rules
 ```
 
 To remove the rules. WARNING: this will delete all rules - you are using pfctl for real, use with caution.
-```
+```bash
 sudo pfctl -F all
 ```
 
 To see the current list of rules:
-```
+```bash
 sudo pfctl -s rules
 ```
 
 To enable the firewall
-```
+```bash
 sudo pfctl -e
 ```
 
 To disable the firewall
-```
+```bash
 sudo pfctl -d
 ```
 
@@ -130,7 +130,18 @@ Running on AgentCore is done through the `agentcore_setup.ipynb` notebook.
 
 Set the `TEMPORAL_API_KEY` in an `.env` file at the root of the `finance-personal-assistant`
 
+#### Get the Temporal Worker running
+
+The worker is run on AgentCore - run each of the cells in the notebook. See the notebook for more information
+
+#### Interact with the agent
+
+```bash
+uv run python -m temporal.start_workflow
+```
+
 #### About the AgentCore deployment
+
 
 AWS Bedrock AgentCore Runtime provides a serverless execution environment. AgentCore `.launch` creates the deployment, however, there will only be active instances when requests are made to the entrypoint of the agent. 
 The unit of deployment to AgentCore Runtime is the Temporal worker.
