@@ -1,7 +1,7 @@
 [project]
-name = "finance-assistant"
+name = "strands-orchestrated-finance-assistant"
 version = "0.1.0"
-description = "Multi-agent financial advisory system using Amazon Bedrock AgentCore and Strands Agents"
+description = "Multi-agent financial advisory system using Strands Agents for orchestration"
 authors = [{name = "Finance Assistant Team"}]
 requires-python = ">=3.10"
 readme = "README.md"
@@ -17,10 +17,7 @@ dependencies = [
     "pydantic>=2.11.7",
     "strands-agents>=1.7.1",
     "strands-agents-tools>=0.2.6",
-    "temporalio>=1.19.0",
     "yfinance>=0.2.65",
-    # protobuf pinned for temporalio compatibility
-    "protobuf>=5.29.3,<6.0.0",
 ]
 
 [project.optional-dependencies]

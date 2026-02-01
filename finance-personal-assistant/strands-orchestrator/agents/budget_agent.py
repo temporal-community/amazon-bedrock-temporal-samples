@@ -1,5 +1,5 @@
-
-from temporalio import activity
+# ABOUTME: Budget agent for personal finance analysis using Strands.
+# ABOUTME: Provides budget breakdowns, financial health scores, and investment recommendations.
 
 from strands import Agent, tool
 from strands.models import BedrockModel
@@ -9,8 +9,8 @@ from .models import FinancialReport
 
 
 # Enhanced system prompt for structured outputs
-BUDGET_SYSTEM_PROMPT = """You are a helpful personal finance assistant. 
-You provide general strategies for creating budgets, tips on financial discipline to achieve financial milestones, and analyze financial trends. You do not provide any investment advice. 
+BUDGET_SYSTEM_PROMPT = """You are a helpful personal finance assistant.
+You provide general strategies for creating budgets, tips on financial discipline to achieve financial milestones, and analyze financial trends. You do not provide any investment advice.
 
 When generating financial reports, always provide:
 1. Clear budget breakdowns using the 50/30/20 rule or custom allocations
@@ -36,7 +36,7 @@ def calculate_budget(monthly_income: float) -> str:
     needs = monthly_income * 0.50
     wants = monthly_income * 0.30
     savings = monthly_income * 0.20
-    return f"💰 Budget for ${monthly_income:,.0f}/month:\n• Needs: ${needs:,.0f} (50%)\n• Wants: ${wants:,.0f} (30%)\n• Savings: ${savings:,.0f} (20%)"
+    return f"Budget for ${monthly_income:,.0f}/month:\n• Needs: ${needs:,.0f} (50%)\n• Wants: ${wants:,.0f} (30%)\n• Savings: ${savings:,.0f} (20%)"
 
 
 @tool
@@ -45,7 +45,7 @@ def create_financial_chart(
 ) -> str:
     """Create a pie chart visualization from financial data dictionary."""
     if not data_dict:
-        return "❌ No data provided for chart"
+        return "No data provided for chart"
 
     labels = list(data_dict.keys())
     values = list(data_dict.values())
@@ -59,12 +59,12 @@ def create_financial_chart(
         colors=colors[: len(values)],
         startangle=90,
     )
-    plt.title(f"📊 {chart_title}", fontsize=14, fontweight="bold")
+    plt.title(f"{chart_title}", fontsize=14, fontweight="bold")
     plt.axis("equal")
     plt.tight_layout()
     plt.show()
 
-    return f"✅ {chart_title} visualization created!"
+    return f"{chart_title} visualization created!"
 
 
 # Create our complete financial agent
@@ -74,27 +74,3 @@ budget_agent = Agent(
     tools=[calculate_budget, create_financial_chart, calculator],
     callback_handler=None,
 )
-
-@activity.defn
-async def budget_agent_activity(prompt: str) -> FinancialReport:
-    """Activity that uses the budget agent to generate a financial report."""
-    activity.logger.info("Budget Agent Activity started")
-
-        # Test structured output using structured_output_async
-    print("\nStructured financial report:")
-    structured_response = budget_agent.structured_output(
-        output_model=FinancialReport,
-        prompt=prompt,
-    )
-    print(f"Income: ${structured_response.monthly_income:,.0f}")
-    for category in structured_response.budget_categories:
-        print(
-            f"• {category.name}: ${category.amount:,.0f} ({category.percentage:.1f}%)"
-        )
-    print(f"\nFinancial Health Score: {structured_response.financial_health_score}/10")
-    print("\nRecommendations:")
-    for i, rec in enumerate(structured_response.recommendations, 1):
-        print(f"{i}. {rec}")
-
-    activity.logger.info("✅ Budget Agent Activity completed")
-    return structured_response

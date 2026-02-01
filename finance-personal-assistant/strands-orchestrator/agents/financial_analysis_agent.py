@@ -1,6 +1,5 @@
-# Export financial analysis agent to standalone Python file
-
-from temporalio import activity
+# ABOUTME: Financial analysis agent for investment research using Strands.
+# ABOUTME: Provides stock analysis, portfolio recommendations, and performance comparisons.
 
 import yfinance as yf
 from strands import Agent, tool
@@ -42,7 +41,7 @@ def get_stock_analysis(symbol: str) -> str:
         ) * 100
 
         return f"""
-📊 Stock Analysis for {symbol.upper()}:
+Stock Analysis for {symbol.upper()}:
 • Current Price: ${current_price:.2f}
 • 52-Week High: ${year_high:.2f}
 • 52-Week Low: ${year_low:.2f}
@@ -52,7 +51,7 @@ def get_stock_analysis(symbol: str) -> str:
 • Sector: {info.get("sector", "N/A")}
 """
     except Exception as e:
-        return f"❌ Unable to retrieve data for {symbol}: {str(e)}"
+        return f"Unable to retrieve data for {symbol}: {str(e)}"
 
 
 # Tool 2: Create Diversified Portfolio
@@ -79,12 +78,12 @@ def create_diversified_portfolio(risk_level: str, investment_amount: float) -> s
     }
 
     if risk_level.lower() not in portfolios:
-        return "❌ Risk level must be: conservative, moderate, or aggressive"
+        return "Risk level must be: conservative, moderate, or aggressive"
 
     portfolio = portfolios[risk_level.lower()]
 
     result = f"""
-🎯 {risk_level.upper()} Portfolio Recommendation (${investment_amount:,.0f}):
+{risk_level.upper()} Portfolio Recommendation (${investment_amount:,.0f}):
 {portfolio["description"]}
 
 Portfolio Allocation:
@@ -94,7 +93,7 @@ Portfolio Allocation:
         allocation = investment_amount * weight
         result += f"• {stock}: {weight * 100:.0f}% (${allocation:,.0f})\n"
 
-    result += "\n⚠️ Disclaimer: This is for educational purposes only. Consult a financial advisor before investing."
+    result += "\nDisclaimer: This is for educational purposes only. Consult a financial advisor before investing."
     return result
 
 
@@ -103,7 +102,7 @@ Portfolio Allocation:
 def compare_stock_performance(symbols: List[str], period: str = "1y") -> str:
     """Compare performance of multiple stocks over a specified period (1y, 6m, 3m, 1m)."""
     if len(symbols) > 5:
-        return "❌ Please limit comparison to 5 stocks maximum"
+        return "Please limit comparison to 5 stocks maximum"
 
     try:
         performance_data = {}
@@ -117,7 +116,7 @@ def compare_stock_performance(symbols: List[str], period: str = "1y") -> str:
                 performance = ((end_price - start_price) / start_price) * 100
                 performance_data[symbol] = performance
 
-        result = f"📈 Stock Performance Comparison ({period}):\n"
+        result = f"Stock Performance Comparison ({period}):\n"
         sorted_stocks = sorted(
             performance_data.items(), key=lambda x: x[1], reverse=True
         )
@@ -128,7 +127,7 @@ def compare_stock_performance(symbols: List[str], period: str = "1y") -> str:
         return result
 
     except Exception as e:
-        return f"❌ Error comparing stocks: {str(e)}"
+        return f"Error comparing stocks: {str(e)}"
 
 
 # Create the Financial Analysis Agent
@@ -138,16 +137,3 @@ financial_analysis_agent = Agent(
     tools=[get_stock_analysis, create_diversified_portfolio, compare_stock_performance],
     callback_handler=None,
 )
-
-@activity.defn
-async def financial_analysis_activity(amount: float) -> str:
-    """Activity that uses the financial analysis agent to create a diversified portfolio and analyze stock performance."""
-    activity.logger.info("Financial Analysis Activity started")
-
-    response = financial_analysis_agent(
-        prompt=f"Create a moderate risk portfolio for {amount} per month and analyze Apple stock",
-    )
-
-    response_text = response.message["content"][0]["text"]
-    print(response_text)
-    return response_text

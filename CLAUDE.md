@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Amazon Bedrock Temporal Samples demonstrates orchestrating AI agents using Temporal with Amazon Bedrock's AgentCore. The main sample is a **Finance Personal Assistant** that uses Temporal workflows to coordinate multiple Strands-based AI agents.
+Amazon Bedrock Temporal Samples demonstrates different approaches to orchestrating AI agents with Amazon Bedrock's AgentCore. The main use case is a **Finance Personal Assistant** with multiple implementation variants.
 
 **Key Technologies:**
 - **Temporal** - Durable execution platform for workflow orchestration
@@ -12,90 +12,73 @@ Amazon Bedrock Temporal Samples demonstrates orchestrating AI agents using Tempo
 - **Amazon Bedrock** - Claude 3.5/3.7 Sonnet models for LLM capabilities
 - **Amazon Bedrock AgentCore** - Serverless execution environment for deployment
 
-## Commands
+## Project Structure
 
-### Local Development (from `finance-personal-assistant/temporal/` directory)
-
-```bash
-# Run the Temporal worker (Terminal 1)
-uv run python -m temporal.worker
-
-# Start/interact with workflow (Terminal 2)
-uv run python -m temporal.start_workflow
+```
+finance-personal-assistant/
+├── temporal-orchestrator/           # Temporal workflow orchestrates agents (human-in-the-loop)
+├── strands-orchestrator/            # Strands agent orchestrates agents (automatic flow)
+└── temporal-orchestrator-and-budget-agent/  # (future variant)
 ```
 
-### Dependencies
+## Sample Variants
 
+### temporal-orchestrator
+Uses Temporal workflows to orchestrate budget and financial analysis agents with human-in-the-loop (user confirms investment amount via signal).
+
+**Run locally:**
 ```bash
-# Install root dependencies
-pip install -r requirements.txt
-
-# Install finance-personal-assistant dependencies
-pip install -r finance-personal-assistant/requirements.txt
+cd finance-personal-assistant/temporal-orchestrator
+uv run python -m temporal.worker        # Terminal 1
+uv run python -m temporal.start_workflow # Terminal 2
 ```
 
-### Dev Tools
-
-```bash
-# Format code
-black .
-
-# Lint
-flake8 .
-
-# Type check
-mypy .
-```
-
-### Required Environment Variables
-
+**Required environment variables:**
 ```bash
 export TEMPORAL_ADDRESS=us-east-1.aws.api.temporal.io:7233
 export TEMPORAL_NAMESPACE=<your-namespace>
 export TEMPORAL_API_KEY=<your-api-key>
 ```
 
-## Architecture
+### strands-orchestrator
+Uses a Strands orchestrator agent to coordinate budget and financial analysis agents. The orchestrator decides when to chain agents based on the query (no human-in-the-loop).
 
-### Workflow Orchestration Pattern
-
-The system uses Temporal workflows to orchestrate multiple AI agent activities:
-
-```
-FinancialAssistantWorkflow
-├── budget_agent_activity (Strands agent → FinancialReport)
-├── invoke_bedrock_model (format budget report)
-├── [wait for signal: investment amount from user]
-├── financial_analysis_activity (Strands agent → portfolio analysis)
-└── invoke_bedrock_model (format analysis)
+**Run locally:**
+```bash
+cd finance-personal-assistant/strands-orchestrator
+python -m agents.run_assistant
 ```
 
-### Key Components
+## Common Components
 
-**Temporal Layer** (`finance-personal-assistant/temporal/`):
-- `financial_assistant_workflow.py` - Main workflow with signals/queries for user interaction
-- `budget_agent_activity.py` - Strands agent for budget analysis, returns structured `FinancialReport`
-- `financial_analysis_activity.py` - Strands agent for stock research via yfinance
-- `llm_activity.py` - Generic Bedrock model invocation activity
-- `models.py` - Pydantic models (`FinancialReport`, `BedrockInvocationRequest`)
-- `worker.py` - Temporal worker entry point
-- `start_workflow.py` - Client for starting workflows and sending signals
+Both variants share:
+- **Budget Agent** - Analyzes spending, creates budgets, provides financial health scores
+- **Financial Analysis Agent** - Stock research, portfolio recommendations via yfinance
+- **FinancialReport model** - Pydantic model for structured budget output
+- **Utils** - AgentCore helpers, guardrails, message formatting
 
-**Utils** (`finance-personal-assistant/utils/`):
-- `message_formatter.py` - Conversation formatting
-- `guardrail.py` - Bedrock guardrail management
-- `agentcore_utils.py` - AgentCore helpers
+## Dependencies
 
-### Temporal Patterns Used
+```bash
+# Install dependencies for a specific variant
+cd finance-personal-assistant/<variant>
+pip install -r requirements.txt
 
-- **Signals** - `set_investment_amount` signal allows external input during workflow execution
-- **Queries** - `get_recommended_investment_amount` exposes workflow state
-- **wait_condition** - Workflow pauses until signal received
-- **Structured outputs** - Strands `structured_output()` with Pydantic models for type-safe agent responses
+# Or use uv
+uv sync
+```
 
-### AgentCore Deployment
+## Dev Tools
 
-The `agentcore_setup.ipynb` notebook handles deployment to AgentCore. The worker runs in a container that auto-scales. Container idle timeout considerations apply - Temporal's durability means workflows survive container restarts.
+```bash
+black .      # Format
+flake8 .     # Lint
+mypy .       # Type check
+```
+
+## AgentCore Deployment
+
+Each variant has an `agentcore_setup.ipynb` notebook for deployment. The notebooks include TTL adjustment code for demos.
 
 ## Python Version
 
