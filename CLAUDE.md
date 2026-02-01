@@ -9,6 +9,7 @@ Amazon Bedrock Temporal Samples demonstrates different approaches to orchestrati
 **Key Technologies:**
 - **Temporal** - Durable execution platform for workflow orchestration
 - **Strands Agents** - Framework for building LLM-powered agents
+- **OpenAI Agents SDK** - Framework for building agents with Temporal durability
 - **Amazon Bedrock** - Claude 3.5/3.7 Sonnet models for LLM capabilities
 - **Amazon Bedrock AgentCore** - Serverless execution environment for deployment
 
@@ -16,9 +17,9 @@ Amazon Bedrock Temporal Samples demonstrates different approaches to orchestrati
 
 ```
 finance-personal-assistant/
-├── temporal-orchestrator/           # Temporal workflow orchestrates agents (human-in-the-loop)
-├── strands-orchestrator/            # Strands agent orchestrates agents (automatic flow)
-└── temporal-orchestrator-and-budget-agent/  # (future variant)
+├── temporal-orchestrator/                    # Temporal workflow orchestrates Strands agents
+├── strands-orchestrator/                     # Strands agent orchestrates Strands agents
+└── temporal-orchestrator-and-budget-agent/   # Temporal + OpenAI Agents SDK hybrid
 ```
 
 ## Sample Variants
@@ -47,6 +48,24 @@ Uses a Strands orchestrator agent to coordinate budget and financial analysis ag
 ```bash
 cd finance-personal-assistant/strands-orchestrator
 python -m agents.run_assistant
+```
+
+### temporal-orchestrator-and-budget-agent
+Hybrid architecture: Temporal orchestrates the workflow, budget agent uses OpenAI Agents SDK with Temporal durability (GPT-4o), financial analysis agent uses Strands (Claude).
+
+**Run locally:**
+```bash
+cd finance-personal-assistant/temporal-orchestrator-and-budget-agent
+uv run python -m temporal.worker        # Terminal 1
+uv run python -m temporal.start_workflow # Terminal 2
+```
+
+**Required environment variables:**
+```bash
+export TEMPORAL_ADDRESS=us-east-1.aws.api.temporal.io:7233
+export TEMPORAL_NAMESPACE=<your-namespace>
+export TEMPORAL_API_KEY=<your-api-key>
+export OPENAI_API_KEY=<your-openai-api-key>
 ```
 
 ## Common Components
