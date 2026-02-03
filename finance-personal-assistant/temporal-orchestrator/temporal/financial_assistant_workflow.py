@@ -86,24 +86,7 @@ class FinancialAssistantWorkflow:
             )
             workflow.logger.info("✅ Financial analysis activity completed")
 
-            # Create Bedrock invocation request with separated system prompt and user prompt
-            bedrock_request = BedrockInvocationRequest(
-                prompt=financial_analysis_result,
-                system_prompt="You are a helpful assistant that formats financial analysis results in a clear, professional, and easy-to-read format.",
-                model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
-                region_name="us-west-2",
-                max_tokens=2000,
-            )
-            
-            # Then, format the result using the generic LLM activity
-            financial_analysis_formatted_result = await workflow.execute_activity(
-                "invoke_bedrock_model",
-                args=[bedrock_request],
-                start_to_close_timeout=timedelta(seconds=30),
-            )
-            workflow.logger.info("✅ LLM format activity for the budget report completed")
-
-            result = f"{formatted_result}\n\n{financial_analysis_formatted_result}"
+            result = f"{formatted_result}\n\n{financial_analysis_result}"
         else:
             result = formatted_result
         workflow.logger.info("✅ Workflow finished")

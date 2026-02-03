@@ -14,7 +14,9 @@ FINANCIAL_ANALYSIS_PROMPT = """You are a specialized financial analysis agent fo
 2. Create diversified investment portfolios
 3. Provide data-driven investment recommendations
 
-You do not provide specific investment advice but rather present analytical data to help users make informed decisions. Always include disclaimers about market risks and the importance of consulting financial advisors."""
+You do not provide specific investment advice but rather present analytical data to help users make informed decisions. Always include disclaimers about market risks and the importance of consulting financial advisors.
+
+Format your responses in a clear, professional, and easy-to-read format suitable for end users."""
 
 bedrock_model = BedrockModel(
     model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
