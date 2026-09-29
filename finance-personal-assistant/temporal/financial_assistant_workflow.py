@@ -1,5 +1,6 @@
 
-from datetime import timedelta
+import asyncio
+from datetime import timedelta, datetime
 from temporalio import workflow
 from .models import DEFAULT_BEDROCK_MODEL_ID, FinancialReport, BedrockInvocationRequest
 
