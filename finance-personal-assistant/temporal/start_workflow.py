@@ -4,6 +4,7 @@ import sys
 import uuid
 
 from temporalio.client import Client
+from dotenv import load_dotenv
 
 from .financial_assistant_workflow import FinancialAssistantWorkflow
 from temporalio.contrib.pydantic import pydantic_data_converter
@@ -19,6 +20,7 @@ def is_guid(s: str) -> bool:
 
 
 async def main():
+    load_dotenv()
     # Get input string from command line argument or prompt
     if len(sys.argv) > 1:
         input_string = sys.argv[1]
@@ -26,21 +28,19 @@ async def main():
         input_string = input("Enter a string (GUID to connect to existing workflow, or any string to start new): ").strip()
 
     # Get Temporal configuration from environment variables
-    temporal_address = os.getenv("TEMPORAL_ADDRESS", "us-east-1.aws.api.temporal.io:7233")
+    temporal_address = os.getenv("TEMPORAL_ADDRESS", "localhost:7233")
     temporal_namespace = os.getenv("TEMPORAL_NAMESPACE", "default")
     temporal_api_key = os.getenv("TEMPORAL_API_KEY") 
 
-    print(f"Connecting to Temporal Cloud at {temporal_address}...")
+    print(f"Connecting to Temporal at {temporal_address}...")
     client = await Client.connect(
         temporal_address,
         namespace=temporal_namespace,
-        tls=True,  # Enable TLS for cloud connection
-        rpc_metadata={
-            "authorization": f"Bearer {temporal_api_key}"
-        },
+        tls=bool(temporal_api_key),
+        api_key=temporal_api_key,
         data_converter=pydantic_data_converter
     )
-    print("✅ Connected to Temporal Cloud")
+    print("✅ Connected to Temporal")
 
     workflow_id = None
     workflow_handle = None

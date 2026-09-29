@@ -1,11 +1,13 @@
 
+import os
+
 from temporalio import activity
 
 from strands import Agent, tool
 from strands.models import BedrockModel
 from strands_tools import calculator
 import matplotlib.pyplot as plt
-from .models import FinancialReport
+from .models import DEFAULT_BEDROCK_MODEL_ID, FinancialReport
 
 
 # Enhanced system prompt for structured outputs
@@ -21,14 +23,6 @@ When generating financial reports, always provide:
 Please determine whether the user is in a position where they can afford to invest. If they are, provide a recommended investment amount. If they are not, provide a recommendation to save more money.
 
 Use structured output when requested to provide comprehensive financial reports."""
-
-# Continue with previous configurations
-bedrock_model = BedrockModel(
-    model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
-    region_name="us-west-2",
-    temperature=0.0,  # Deterministic responses for financial advice
-)
-
 
 @tool
 def calculate_budget(monthly_income: float) -> str:
@@ -67,20 +61,23 @@ def create_financial_chart(
     return f"✅ {chart_title} visualization created!"
 
 
-# Create our complete financial agent
-budget_agent = Agent(
-    model=bedrock_model,
-    system_prompt=BUDGET_SYSTEM_PROMPT,
-    tools=[calculate_budget, create_financial_chart, calculator],
-    callback_handler=None,
-)
-
 @activity.defn
-async def budget_agent_activity(prompt: str) -> FinancialReport:
+def budget_agent_activity(prompt: str) -> FinancialReport:
     """Activity that uses the budget agent to generate a financial report."""
     activity.logger.info("Budget Agent Activity started")
+    # A fresh agent keeps conversation state isolated across concurrent Activities.
+    budget_agent = Agent(
+        model=BedrockModel(
+            model_id=DEFAULT_BEDROCK_MODEL_ID,
+            region_name=os.environ.get("AWS_REGION", "us-west-2"),
+            temperature=0.0,
+            streaming=False,
+        ),
+        system_prompt=BUDGET_SYSTEM_PROMPT,
+        tools=[calculate_budget, create_financial_chart, calculator],
+        callback_handler=None,
+    )
 
-        # Test structured output using structured_output_async
     print("\nStructured financial report:")
     structured_response = budget_agent.structured_output(
         output_model=FinancialReport,

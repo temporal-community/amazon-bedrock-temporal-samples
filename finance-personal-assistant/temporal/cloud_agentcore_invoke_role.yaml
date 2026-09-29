@@ -1,0 +1,47 @@
+# Based on Temporal's AgentCore Serverless Workers CloudFormation template:
+# https://docs.temporal.io/files/temporal-cloud-serverless-worker-agentcore-role.yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IAM role Temporal Cloud assumes to start AgentCore Serverless Workers.
+
+Parameters:
+  AssumeRoleExternalId:
+    Type: String
+    MinLength: 5
+    MaxLength: 45
+    AllowedPattern: '[a-zA-Z0-9_+=,.@-]*'
+  AgentRuntimeArn:
+    Type: String
+
+Resources:
+  TemporalInvokeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - arn:aws:iam::902542641901:role/wci-lambda-invoke
+                - arn:aws:iam::160190466495:role/wci-lambda-invoke
+                - arn:aws:iam::819232936619:role/wci-lambda-invoke
+                - arn:aws:iam::829909441867:role/wci-lambda-invoke
+                - arn:aws:iam::354116250941:role/wci-lambda-invoke
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                'sts:ExternalId': !Ref AssumeRoleExternalId
+      Policies:
+        - PolicyName: InvokeFinanceWorkerRuntime
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock-agentcore:InvokeAgentRuntime
+                  - bedrock-agentcore:GetAgentRuntimeEndpoint
+                Resource: !Sub '${AgentRuntimeArn}*'
+
+Outputs:
+  RoleArn:
+    Value: !GetAtt TemporalInvokeRole.Arn
