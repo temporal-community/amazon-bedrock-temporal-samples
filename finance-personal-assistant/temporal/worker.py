@@ -1,8 +1,10 @@
 import asyncio
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 from temporalio.client import Client
 from temporalio.worker import Worker
+from dotenv import load_dotenv
 
 from .financial_assistant_workflow import FinancialAssistantWorkflow
 from .budget_agent_activity import budget_agent_activity
@@ -12,6 +14,7 @@ from temporalio.contrib.pydantic import pydantic_data_converter
 
 
 async def main():
+    load_dotenv()
 
     # Get Temporal configuration from environment variables
     temporal_address = os.getenv("TEMPORAL_ADDRESS", "us-east-1.aws.api.temporal.io:7233")
@@ -22,27 +25,25 @@ async def main():
     client = await Client.connect(
         temporal_address,
         namespace=temporal_namespace,
-        tls=True,  # Enable TLS for cloud connection
-        rpc_metadata={
-            "authorization": f"Bearer {temporal_api_key}"
-        },
+        tls=bool(temporal_api_key),
+        api_key=temporal_api_key,
         data_converter=pydantic_data_converter
     )
     print("✅ Connected to Temporal Cloud")
 
-    worker = Worker(
-        client,
-        task_queue="financial-assistant-task-queue",
-        workflows=[
-            FinancialAssistantWorkflow,
-        ],
-        activities=[
-            budget_agent_activity,
-            invoke_bedrock_model,
-            financial_analysis_activity,
-        ],
-    )
-    await worker.run()
+    with ThreadPoolExecutor(max_workers=4) as activity_executor:
+        worker = Worker(
+            client,
+            task_queue="financial-assistant-task-queue",
+            workflows=[FinancialAssistantWorkflow],
+            activities=[
+                budget_agent_activity,
+                invoke_bedrock_model,
+                financial_analysis_activity,
+            ],
+            activity_executor=activity_executor,
+        )
+        await worker.run()
 
 
 if __name__ == "__main__":

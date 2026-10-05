@@ -4,6 +4,7 @@ import sys
 import uuid
 
 from temporalio.client import Client
+from dotenv import load_dotenv
 
 from .financial_assistant_workflow import FinancialAssistantWorkflow
 from temporalio.contrib.pydantic import pydantic_data_converter
@@ -19,6 +20,7 @@ def is_guid(s: str) -> bool:
 
 
 async def main():
+    load_dotenv()
     # Get input string from command line argument or prompt
     if len(sys.argv) > 1:
         input_string = sys.argv[1]
@@ -34,10 +36,8 @@ async def main():
     client = await Client.connect(
         temporal_address,
         namespace=temporal_namespace,
-        tls=True,  # Enable TLS for cloud connection
-        rpc_metadata={
-            "authorization": f"Bearer {temporal_api_key}"
-        },
+        tls=bool(temporal_api_key),
+        api_key=temporal_api_key,
         data_converter=pydantic_data_converter
     )
     print("✅ Connected to Temporal Cloud")

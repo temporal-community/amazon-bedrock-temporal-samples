@@ -1,6 +1,8 @@
 from typing import Optional, List
 from pydantic import BaseModel, Field
 
+DEFAULT_BEDROCK_MODEL_ID = "us.amazon.nova-2-lite-v1:0"
+
 
 class BudgetCategory(BaseModel):
     """Budget category model."""
@@ -51,12 +53,12 @@ class BedrockInvocationRequest(BaseModel):
         description="Array of messages for conversation history"
     )
     model_id: str = Field(
-        default="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+        default=DEFAULT_BEDROCK_MODEL_ID,
         description="The Bedrock model ID to use"
     )
-    region_name: str = Field(
-        default="us-west-2",
-        description="AWS region for the Bedrock runtime client"
+    region_name: Optional[str] = Field(
+        default=None,
+        description="AWS region for the Bedrock runtime client; defaults to AWS_REGION"
     )
     max_tokens: int = Field(
         default=2000,
@@ -66,4 +68,3 @@ class BedrockInvocationRequest(BaseModel):
         default=None,
         description="Optional temperature setting for the model"
     )
-

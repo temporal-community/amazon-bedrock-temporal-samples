@@ -124,15 +124,22 @@ sudo pfctl -d
 
 ### Run on AgentCore
 
-Running on AgentCore is done through the `agentcore_setup.ipynb` notebook.
+The [setup notebook](./agentcore_setup.ipynb) deploys this Temporal Worker as an AgentCore Serverless Worker. Temporal Cloud starts the Worker when its Task Queue has work, and the Worker drains after 60 idle seconds.
 
 #### Prerequisites
 
-Set the `TEMPORAL_API_KEY` in an `.env` file at the root of the `finance-personal-assistant`
+Use an AWS-hosted Temporal Cloud namespace with the AgentCore Serverless Workers feature enabled, an AgentCore-supported AWS Region, AWS credentials, and Temporal CLI v1.8.3 or newer. From this directory, install the project and notebook tools:
+
+```bash
+uv sync --python 3.12
+uv pip install --python .venv/bin/python jupyterlab ipykernel
+```
+
+Copy `.env.example` to `.env` and set the Temporal Cloud address, namespace, API key, AWS Region, a new build ID, and an External ID. The `.env` file is ignored by Git.
 
 #### Get the Temporal Worker running
 
-The worker is run on AgentCore - run each of the cells in the notebook. See the notebook for more information
+Open `.venv/bin/jupyter lab` and run `agentcore_setup.ipynb` in order. It stores the API key in Secrets Manager, deploys the AgentCore Runtime and a named endpoint, creates an IAM role for Temporal Cloud to invoke it, and registers the endpoint as a Worker Deployment Version. Validate the connection in Temporal Cloud before running the notebook cell that makes the version current.
 
 #### Interact with the agent
 
@@ -140,19 +147,4 @@ The worker is run on AgentCore - run each of the cells in the notebook. See the 
 uv run python -m temporal.start_workflow
 ```
 
-#### About the AgentCore deployment
-
-
-AWS Bedrock AgentCore Runtime provides a serverless execution environment. AgentCore `.launch` creates the deployment, however, there will only be active instances when requests are made to the entrypoint of the agent. 
-The unit of deployment to AgentCore Runtime is the Temporal worker.
-But Temporal is event driven - the worker looks for work on task queues and dispatches that work to the appropriate part of the application.
-
-How the agent lifecycle is managed must, therefore, be carefully addressed. One option is to set the container idle timeout very high - the maximum is 8 hours. This may, however, result in idle containers. How to handle AgentCore Runtime autoscaling for Temporal deployments will be addressed in the future.
-
-The good news is that Temporal does not depend on a container staying alive for the duration of the agent execution. If the container goes away, when it comes back, the agent will pick up where it left off, care of Temporal.
-
-There is a cell in the notebook that sets the container idle timeout to 60 seconds - this allows us to demostrate the durability that Temporal delivers.
-
-Further details are found in the notebook.
-
-
+The CLI starts a Workflow, queries its recommended investment amount, and signals the amount to invest. Let the Worker drain while the Workflow waits for the signal; Temporal will start AgentCore capacity again when the signal creates more work. Use a new build ID for each deployment run and keep old named endpoints while pinned Workflows may still need them.

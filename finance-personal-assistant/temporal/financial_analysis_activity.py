@@ -1,11 +1,14 @@
 # Export financial analysis agent to standalone Python file
 
+import os
+
 from temporalio import activity
 
 import yfinance as yf
 from strands import Agent, tool
 from typing import List
 from strands.models import BedrockModel
+from .models import DEFAULT_BEDROCK_MODEL_ID
 
 # Financial Analysis Agent System Prompt
 FINANCIAL_ANALYSIS_PROMPT = """You are a specialized financial analysis agent focused on investment research and portfolio recommendations. Your role is to:
@@ -15,13 +18,6 @@ FINANCIAL_ANALYSIS_PROMPT = """You are a specialized financial analysis agent fo
 3. Provide data-driven investment recommendations
 
 You do not provide specific investment advice but rather present analytical data to help users make informed decisions. Always include disclaimers about market risks and the importance of consulting financial advisors."""
-
-bedrock_model = BedrockModel(
-    model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
-    region_name="us-west-2",
-    temperature=0.0,  # Deterministic responses for financial advice
-)
-
 
 # Tool 1: Get Stock Analysis
 @tool
@@ -131,19 +127,21 @@ def compare_stock_performance(symbols: List[str], period: str = "1y") -> str:
         return f"❌ Error comparing stocks: {str(e)}"
 
 
-# Create the Financial Analysis Agent
-financial_analysis_agent = Agent(
-    model=bedrock_model,  # Using the same bedrock_model from Step 1
-    system_prompt=FINANCIAL_ANALYSIS_PROMPT,
-    tools=[get_stock_analysis, create_diversified_portfolio, compare_stock_performance],
-    callback_handler=None,
-)
-
 @activity.defn
-async def financial_analysis_activity(amount: float) -> str:
+def financial_analysis_activity(amount: float) -> str:
     """Activity that uses the financial analysis agent to create a diversified portfolio and analyze stock performance."""
     activity.logger.info("Financial Analysis Activity started")
-
+    financial_analysis_agent = Agent(
+        model=BedrockModel(
+            model_id=DEFAULT_BEDROCK_MODEL_ID,
+            region_name=os.environ.get("AWS_REGION", "us-west-2"),
+            temperature=0.0,
+            streaming=False,
+        ),
+        system_prompt=FINANCIAL_ANALYSIS_PROMPT,
+        tools=[get_stock_analysis, create_diversified_portfolio, compare_stock_performance],
+        callback_handler=None,
+    )
     response = financial_analysis_agent(
         prompt=f"Create a moderate risk portfolio for {amount} per month and analyze Apple stock",
     )

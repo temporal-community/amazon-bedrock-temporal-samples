@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta, datetime
 from temporalio import workflow
-from .models import FinancialReport, BedrockInvocationRequest
+from .models import DEFAULT_BEDROCK_MODEL_ID, FinancialReport, BedrockInvocationRequest
 
 @workflow.defn
 class FinancialAssistantWorkflow:
@@ -31,7 +31,7 @@ class FinancialAssistantWorkflow:
         budget_result = await workflow.execute_activity(
             "budget_agent_activity",
             args=[prompt],
-            start_to_close_timeout=timedelta(seconds=10),
+            start_to_close_timeout=timedelta(minutes=5),
         )
         workflow.logger.info("✅ Budget agent activity completed")
         
@@ -60,8 +60,7 @@ class FinancialAssistantWorkflow:
         bedrock_request = BedrockInvocationRequest(
             prompt=user_prompt,
             system_prompt=system_prompt,
-            model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
-            region_name="us-west-2",
+            model_id=DEFAULT_BEDROCK_MODEL_ID,
             max_tokens=2000,
         )
         
@@ -69,7 +68,7 @@ class FinancialAssistantWorkflow:
         formatted_result = await workflow.execute_activity(
             "invoke_bedrock_model",
             args=[bedrock_request],
-            start_to_close_timeout=timedelta(seconds=30),
+            start_to_close_timeout=timedelta(minutes=2),
         )
         workflow.logger.info("✅ LLM format activity for the budget report completed")
 
@@ -82,7 +81,7 @@ class FinancialAssistantWorkflow:
             financial_analysis_result = await workflow.execute_activity(
                 "financial_analysis_activity",
                 args=[self.requested_investment_amount],
-                start_to_close_timeout=timedelta(seconds=30),
+                start_to_close_timeout=timedelta(minutes=5),
             )
             workflow.logger.info("✅ Financial analysis activity completed")
 
@@ -90,8 +89,7 @@ class FinancialAssistantWorkflow:
             bedrock_request = BedrockInvocationRequest(
                 prompt=financial_analysis_result,
                 system_prompt="You are a helpful assistant that formats financial analysis results in a clear, professional, and easy-to-read format.",
-                model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
-                region_name="us-west-2",
+                model_id=DEFAULT_BEDROCK_MODEL_ID,
                 max_tokens=2000,
             )
             
@@ -99,7 +97,7 @@ class FinancialAssistantWorkflow:
             financial_analysis_formatted_result = await workflow.execute_activity(
                 "invoke_bedrock_model",
                 args=[bedrock_request],
-                start_to_close_timeout=timedelta(seconds=30),
+                start_to_close_timeout=timedelta(minutes=2),
             )
             workflow.logger.info("✅ LLM format activity for the budget report completed")
 
